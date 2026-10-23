@@ -1,14 +1,14 @@
 {
   "profile": {
-    "name": "[First] [Last]",
-    "role": "[Role] · [Team]",
-    "tagline": "[One sentence — your focus areas and what you're working toward.]",
-    "location": "[City, Country]",
+    "name": "Ezekiel (Ren) Ni",
+    "role": "[Broadcast Team Member] · [Infrastructure Team]",
+    "tagline": "Hands-on systems administration experience, now building detection and investigation skills for a career in SOC, DFIR, and eventually purple teaming.",
+    "location": "Sydney, Australia",
     "photo": "",
-    "theme": "operator",
+    "theme": "terminal",
     "links": {
-      "linkedin": "",
-      "github": "",
+      "linkedin": "https://www.linkedin.com/in/ezekiel-ni/",
+      "github": "https://github.com/ren-sec",
       "email": ""
     }
   },
