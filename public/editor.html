@@ -1,0 +1,1777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOCSIM Portfolio Editor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css" />
+  <style>
+  /* ── EasyMDE dark theme ── */
+  .EasyMDEContainer { width: 100%; }
+  .EasyMDEContainer .editor-toolbar {
+    background: #111; border: 1px solid rgba(255,255,255,0.1);
+    border-bottom: none; border-radius: 4px 4px 0 0; padding: 4px 6px;
+  }
+  .EasyMDEContainer .editor-toolbar button {
+    color: #777 !important; border: none; background: none;
+    border-radius: 3px; width: 26px; height: 26px; padding: 0;
+  }
+  .EasyMDEContainer .editor-toolbar button:hover,
+  .EasyMDEContainer .editor-toolbar button.active {
+    background: rgba(255,255,255,0.08) !important; color: #e8e8e8 !important;
+  }
+  .EasyMDEContainer .editor-toolbar i.separator {
+    border-color: rgba(255,255,255,0.1) !important;
+  }
+  .EasyMDEContainer .CodeMirror {
+    background: #1a1a1a !important; color: #e8e8e8 !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 0 0 4px 4px !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 13.5px !important; line-height: 1.65 !important;
+    padding: 8px 4px;
+  }
+  .EasyMDEContainer .CodeMirror-focused {
+    border-color: rgba(240,122,34,0.5) !important;
+  }
+  .EasyMDEContainer .CodeMirror .cm-strong { color: #fff !important; font-weight: 600; }
+  .EasyMDEContainer .CodeMirror .cm-em { color: #aaa !important; }
+  .EasyMDEContainer .CodeMirror .cm-url,
+  .EasyMDEContainer .CodeMirror .cm-link { color: #f07a22 !important; }
+  .EasyMDEContainer .CodeMirror .cm-comment { color: #c8c8c8 !important; background: rgba(255,255,255,0.05); border-radius: 2px; }
+  .EasyMDEContainer .CodeMirror .cm-header { color: #fff !important; font-weight: 700; }
+  .EasyMDEContainer .CodeMirror-cursor { border-color: #f07a22 !important; }
+  .EasyMDEContainer .editor-preview {
+    background: #141414 !important; color: #e8e8e8 !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+  }
+  .EasyMDEContainer .editor-preview pre {
+    background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 3px; padding: 10px;
+  }
+  .EasyMDEContainer .editor-preview code { color: #f07a22; background: rgba(255,255,255,0.06); }
+  .EasyMDEContainer .editor-statusbar { display: none; }
+  /* screenshot helper panel */
+  .screenshot-help {
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.7);
+    z-index:300; align-items:center; justify-content:center;
+  }
+  .screenshot-help.open { display:flex; }
+  .screenshot-help-box {
+    background:#141414; border:1px solid rgba(255,255,255,.12);
+    border-radius:8px; padding:28px 32px; max-width:480px; width:90%;
+  }
+  .screenshot-help-box h3 {
+    font-family:'Big Shoulders Display',sans-serif; font-weight:700;
+    font-size:1.3rem; color:#fff; margin-bottom:12px;
+  }
+  .screenshot-help-box ol {
+    color:#888; font-size:.875rem; line-height:1.8; margin-left:1.2em;
+  }
+  .screenshot-help-box ol li strong { color:#e8e8e8; }
+  .screenshot-help-box code {
+    font-family:'JetBrains Mono',monospace; font-size:.78rem;
+    background:rgba(255,255,255,.07); padding:1px 6px; border-radius:3px;
+    color:#f07a22;
+  }
+  .screenshot-help-box .close-btn { margin-top:20px; }
+  </style>
+  <style>
+    :root {
+      --bg:#0d0d0d;--surface:#141414;--surface-2:#1a1a1a;--surface-3:#1f1f1f;
+      --border:rgba(255,255,255,0.1);--focus:rgba(240,122,34,0.5);
+      --accent:#f07a22;--text:#e8e8e8;--dim:#888;--dimmer:#555;
+      --danger:#ef4444;--green:#22c55e;--yellow:#eab308;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
+
+    /* ── HEADER ── */
+    .ed-header{background:rgba(13,13,13,.95);border-bottom:1px solid var(--border);padding:14px 40px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:100}
+    .ed-logo{font-family:'Big Shoulders Display',sans-serif;font-weight:900;font-size:1.1rem;color:var(--accent);letter-spacing:.06em}
+    .ed-title{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--dimmer);letter-spacing:.1em;text-transform:uppercase;margin-left:10px}
+    .header-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+    /* ── BUTTONS ── */
+    .btn{font-family:'JetBrains Mono',monospace;font-size:.66rem;letter-spacing:.05em;padding:7px 14px;border-radius:4px;border:1px solid var(--border);background:var(--surface-2);color:var(--dim);cursor:pointer;transition:border-color .15s,color .15s;display:inline-flex;align-items:center;gap:6px}
+    .btn:hover{border-color:var(--dim);color:var(--text)}
+    .btn-primary{background:var(--accent);border-color:var(--accent);color:#000;font-weight:600}
+    .btn-primary:hover{background:#d96d1a;border-color:#d96d1a;color:#000}
+    .btn-ghost{background:transparent;border-color:transparent;color:var(--dim)}
+    .btn-ghost:hover{border-color:var(--border);color:var(--text)}
+    .btn-danger{border-color:rgba(239,68,68,.3);color:var(--danger);background:rgba(239,68,68,.05);padding:4px 10px;font-size:.58rem}
+    .btn-danger:hover{border-color:var(--danger);background:rgba(239,68,68,.1)}
+    .btn-add{border-style:dashed;color:var(--accent);border-color:rgba(240,122,34,.3);background:rgba(240,122,34,.04);font-size:.63rem}
+    .btn-add:hover{border-color:var(--accent);background:rgba(240,122,34,.08)}
+    .btn-sm{padding:4px 10px;font-size:.6rem}
+    .btn-green{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.3);color:var(--green)}
+    .btn-green:hover{background:rgba(34,197,94,.2);border-color:var(--green)}
+
+    /* ── NOTIFICATION ── */
+    #notif{display:none;position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:200;padding:12px 20px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:.72rem;letter-spacing:.04em;max-width:90vw;text-align:center;transition:opacity .3s}
+    #notif.success{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);color:var(--green)}
+    #notif.error{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);color:var(--danger)}
+
+    /* ── GITHUB SETTINGS PANEL ── */
+    .gh-panel{background:var(--surface);border:1px solid var(--border);border-radius:6px;margin-bottom:28px;overflow:hidden}
+    .gh-panel-header{padding:14px 20px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+    .gh-panel-title{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+    .gh-connected{display:inline-flex;align-items:center;gap:5px;color:var(--green);font-size:.6rem}
+    .gh-connected::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green)}
+    .gh-panel-body{padding:20px;border-top:1px solid var(--border)}
+    .gh-panel-body.hidden{display:none}
+    .gh-fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px}
+    .gh-instructions{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--dimmer);line-height:1.7;padding:12px;background:var(--surface-2);border-radius:4px;border:1px solid var(--border)}
+    .gh-instructions a{color:var(--accent);text-decoration:none}
+    .gh-instructions a:hover{text-decoration:underline}
+
+    /* ── BODY LAYOUT ── */
+    .ed-body{max-width:880px;margin:0 auto;padding:32px 24px 100px}
+
+    /* ── SECTIONS ── */
+    .ed-section{margin-bottom:36px}
+    .ed-section-title{font-family:'Big Shoulders Display',sans-serif;font-weight:700;font-size:1.4rem;color:#fff;margin-bottom:2px}
+    .ed-section-sub{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--dimmer);letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px}
+    .ed-panel{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:24px}
+
+    /* ── FORM ── */
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+    .form-row.full{grid-template-columns:1fr}
+    .form-row.three{grid-template-columns:1fr 1fr 1fr}
+    .form-row.four{grid-template-columns:1fr 1fr 1fr 1fr}
+    .form-field{display:flex;flex-direction:column;gap:5px}
+    .form-label{font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--dimmer);letter-spacing:.14em;text-transform:uppercase}
+    .form-hint{font-size:.55rem;color:var(--dimmer);font-style:normal;letter-spacing:.02em;text-transform:none}
+    .form-input,.form-textarea,.form-select{background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Inter',sans-serif;font-size:.875rem;padding:8px 11px;outline:none;width:100%;transition:border-color .15s}
+    .form-input:focus,.form-textarea:focus,.form-select:focus{border-color:var(--focus)}
+    .form-input::placeholder,.form-textarea::placeholder{color:var(--dimmer)}
+    .form-textarea{resize:vertical;min-height:75px;line-height:1.6}
+    .form-select{cursor:pointer}
+    .form-divider{height:1px;background:var(--border);margin:20px 0}
+    .sub-label{font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
+
+    /* ── INVESTIGATION BLOCKS ── */
+    .inv-container{display:flex;flex-direction:column;gap:20px}
+    .inv-block{background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+    .inv-block-header{background:var(--surface-2);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none}
+    .inv-block-header:hover{background:#222}
+    .inv-caret{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--dimmer);width:14px;flex-shrink:0}
+    .inv-summary{flex:1;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--dim);letter-spacing:.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+    .inv-body.hidden{display:none}
+    .inv-type-badge{font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:3px}
+    .badge-alert{color:var(--accent);background:rgba(240,122,34,.1);border:1px solid rgba(240,122,34,.3)}
+    .badge-bec{color:var(--yellow);background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.25)}
+    .inv-num{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--dimmer)}
+    .inv-body{padding:20px}
+    .inv-sub{margin-bottom:20px}
+    .inv-sub:last-child{margin-bottom:0}
+
+    /* ── REPEATER ROWS ── */
+    .rep-rows{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+    .rep-row{background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:10px 12px;display:grid;gap:8px;align-items:start}
+    .rep-row.tl-row{grid-template-columns:130px 1fr 1fr auto}
+    .rep-row.bec-tl-row{grid-template-columns:130px 1fr 1fr auto}
+    .rep-row.step-row{grid-template-columns:1fr auto}
+    .rep-cell{display:flex;flex-direction:column;gap:3px}
+    .rep-cell-label{font-family:'JetBrains Mono',monospace;font-size:.54rem;color:var(--dimmer);letter-spacing:.1em;text-transform:uppercase}
+    .rep-remove{align-self:flex-end;padding-bottom:1px}
+
+    /* ── CUSTOM SECTION ROWS ── */
+    .cs-row{background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:12px;margin-bottom:8px}
+    .cs-row-head{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+    .cs-row-head .form-input{flex:1}
+    .cs-row .EasyMDEContainer .CodeMirror{background:#161616 !important}
+
+    /* ── SAVE STATUS ── */
+    .action-bar-hint.status-dirty{color:var(--accent)}
+    .action-bar-hint.status-clean{color:var(--green)}
+    .btn-primary.attn{box-shadow:0 0 0 3px rgba(240,122,34,.28)}
+
+    /* ── VERIFIED TOGGLE ── */
+    .verified-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:4px;background:var(--surface-2);cursor:pointer}
+    .verified-row input{accent-color:var(--green);width:14px;height:14px;cursor:pointer}
+    .verified-row label{font-size:.875rem;color:var(--dim);cursor:pointer}
+    .verified-row label strong{color:var(--green)}
+
+    /* ── ACTION BAR ── */
+    .action-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(13,13,13,.97);border-top:1px solid var(--border);padding:14px 40px;display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:100}
+    .action-bar-hint{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--dimmer);letter-spacing:.04em}
+    .action-bar-right{display:flex;gap:8px}
+    #file-input{display:none}
+
+    /* ── THEME PICKER ── */
+    .theme-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+    .theme-swatch{
+      cursor:pointer;border:2px solid var(--border);border-radius:6px;
+      overflow:hidden;transition:border-color .15s,transform .1s;
+    }
+    .theme-swatch:hover{border-color:rgba(255,255,255,.3);transform:translateY(-1px)}
+    .theme-swatch.active{border-color:#f07a22;box-shadow:0 0 0 1px #f07a22}
+    .swatch-preview{
+      height:48px;display:flex;align-items:center;justify-content:center;gap:6px;
+      padding:8px;position:relative;
+    }
+    .swatch-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+    .swatch-label{
+      font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.06em;
+      text-align:center;padding:5px 4px;border-top:1px solid rgba(255,255,255,.06);
+      color:#666;background:#111;
+    }
+
+    @media(max-width:640px){
+      .theme-grid{grid-template-columns:repeat(3,1fr)}
+    }
+
+    @media(max-width:640px){
+      .ed-header{padding:12px 16px}.ed-body{padding:20px 14px 90px}
+      .form-row,.form-row.three,.form-row.four{grid-template-columns:1fr}
+      .gh-fields{grid-template-columns:1fr}
+      .rep-row.tl-row,.rep-row.bec-tl-row{grid-template-columns:1fr}
+      .action-bar{padding:12px 16px;flex-wrap:wrap}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NOTIFICATION ────────────────────────────────── -->
+<div id="notif"></div>
+
+<!-- ── HEADER ─────────────────────────────────────── -->
+<header class="ed-header">
+  <div style="display:flex;align-items:center;">
+    <span class="ed-logo">SOCSIM</span>
+    <span class="ed-title">Portfolio Editor</span>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-green btn-sm" onclick="loadFromGitHub()">⬇ Load from GitHub</button>
+    <button class="btn btn-ghost btn-sm" onclick="document.getElementById('file-input').click()" title="Load a portfolio.json file from your computer">↑ Load file</button>
+    <button class="btn btn-ghost btn-sm" onclick="downloadJSON()" title="Download a portfolio.json backup of everything currently in the form">↓ Backup</button>
+    <input type="file" id="file-input" accept=".json,application/json" onchange="loadJSON(this)" />
+    <input type="file" id="img-input" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none;" onchange="uploadScreenshot(this)" />
+    <button class="btn btn-sm" onclick="updateFromTemplate()" title="Pull the latest components, styles and editor from the SOCSIM template. Your portfolio data is never touched.">↻ Update template</button>
+    <button class="btn btn-primary btn-sm js-publish" onclick="publishToGitHub()">⬆ Publish to GitHub</button>
+  </div>
+</header>
+
+<!-- ── BODY ───────────────────────────────────────── -->
+<div class="ed-body">
+
+  <!-- GITHUB SETTINGS -->
+  <div class="gh-panel" id="gh-panel">
+    <div class="gh-panel-header" onclick="toggleGHPanel()">
+      <span class="gh-panel-title">
+        ⚙ GitHub Settings
+        <span id="gh-status" class="gh-connected" style="display:none;">Connected</span>
+      </span>
+      <span id="gh-caret" style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--dimmer);">▼</span>
+    </div>
+    <div class="gh-panel-body" id="gh-body">
+      <div class="gh-fields">
+        <div class="form-field">
+          <label class="form-label">GitHub Username / Org</label>
+          <input type="text" class="form-input" id="gh-owner" placeholder="dalancoburn" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Repository Name</label>
+          <input type="text" class="form-input" id="gh-repo" placeholder="socsim-portfolio" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Personal Access Token</label>
+          <input type="password" class="form-input" id="gh-token" placeholder="ghp_…" autocomplete="off" />
+        </div>
+      </div>
+      <div class="gh-instructions">
+        <strong style="color:var(--dim);">One-time setup:</strong> Create a token at
+        <a href="https://github.com/settings/tokens/new?scopes=repo&description=SOCSIM+Portfolio+Editor" target="_blank">github.com → Settings → Developer settings → Personal access tokens (classic)</a>.
+        Select scope: <strong style="color:var(--text);">repo</strong>. Paste it above and click Save — your token stays in your browser only, never leaves your machine.
+        <br/><br/>
+        After saving, use <strong style="color:var(--text);">⬆ Publish to GitHub</strong> to push directly — your site rebuilds in ~60 seconds.
+      </div>
+      <button class="btn btn-green" style="margin-top:12px;" onclick="saveGHSettings()">Save settings</button>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="ed-section">
+    <div class="ed-section-title">Profile</div>
+    <div class="ed-section-sub">Your identity — shown in the header of the portfolio</div>
+    <div class="ed-panel">
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Full Name</label>
+          <input id="p-name" type="text" class="form-input" placeholder="Your full name" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Role / Title</label>
+          <input id="p-role" type="text" class="form-input" placeholder="e.g. Security Analyst II · Blue Team" />
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-field">
+          <label class="form-label">Tagline <span class="form-hint">— one sentence, your focus areas</span></label>
+          <input id="p-tagline" type="text" class="form-input" placeholder="What you specialise in and what you're working toward" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Location</label>
+          <input id="p-location" type="text" class="form-input" placeholder="City, Country" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Photo URL <span class="form-hint">optional</span></label>
+          <input id="p-photo" type="url" class="form-input" placeholder="https://…/photo.jpg" />
+        </div>
+      </div>
+      <div class="form-divider"></div>
+      <div class="sub-label">Links</div>
+      <div class="form-row three">
+        <div class="form-field">
+          <label class="form-label">LinkedIn</label>
+          <input id="p-linkedin" type="url" class="form-input" placeholder="https://linkedin.com/in/…" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">GitHub</label>
+          <input id="p-github" type="url" class="form-input" placeholder="https://github.com/…" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Email</label>
+          <input id="p-email" type="email" class="form-input" placeholder="you@example.com" />
+        </div>
+      </div>
+
+      <div class="form-divider"></div>
+      <div class="sub-label">Portfolio Theme</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--dimmer);margin-bottom:12px;letter-spacing:.03em;">Applied to your live portfolio — not previewed here in the editor.</div>
+      <input type="hidden" id="p-theme" value="operator" />
+      <div class="theme-grid" id="theme-grid">
+
+        <div class="theme-swatch active" data-theme="operator" onclick="selectTheme('operator')">
+          <div class="swatch-preview" style="background:#0d0d0d;">
+            <div class="swatch-dot" style="background:#f07a22;"></div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:.55rem;color:#888;">Aa</div>
+          </div>
+          <div class="swatch-label">Operator</div>
+        </div>
+
+        <div class="theme-swatch" data-theme="terminal" onclick="selectTheme('terminal')">
+          <div class="swatch-preview" style="background:#000000;">
+            <div class="swatch-dot" style="background:#00e676;"></div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:.55rem;color:#5db87a;">Aa</div>
+          </div>
+          <div class="swatch-label">Terminal</div>
+        </div>
+
+        <div class="theme-swatch" data-theme="midnight" onclick="selectTheme('midnight')">
+          <div class="swatch-preview" style="background:#080e1f;">
+            <div class="swatch-dot" style="background:#38bdf8;"></div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:.55rem;color:#94a3b8;">Aa</div>
+          </div>
+          <div class="swatch-label">Midnight</div>
+        </div>
+
+        <div class="theme-swatch" data-theme="obsidian" onclick="selectTheme('obsidian')">
+          <div class="swatch-preview" style="background:#09090b;">
+            <div class="swatch-dot" style="background:#a78bfa;"></div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:.55rem;color:#a1a1aa;">Aa</div>
+          </div>
+          <div class="swatch-label">Obsidian</div>
+        </div>
+
+        <div class="theme-swatch" data-theme="arctic" onclick="selectTheme('arctic')">
+          <div class="swatch-preview" style="background:#f8fafc;">
+            <div class="swatch-dot" style="background:#0369a1;"></div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:.55rem;color:#475569;">Aa</div>
+          </div>
+          <div class="swatch-label">Arctic</div>
+        </div>
+
+        <div class="theme-swatch" data-theme="crimson" onclick="selectTheme('crimson')">
+          <div class="swatch-preview" style="background:#0c0808;">
+            <div class="swatch-dot" style="background:#f43f5e;"></div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:.55rem;color:#fca5a5;">Aa</div>
+          </div>
+          <div class="swatch-label">Crimson</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ALERT INVESTIGATIONS -->
+  <div class="ed-section">
+    <div class="ed-section-title">Alert Investigations</div>
+    <div class="ed-section-sub">One entry per completed alert triage in the SOCSIM lab</div>
+    <div class="inv-container" id="alerts-container"></div>
+    <button class="btn btn-add" style="margin-top:14px;width:100%;justify-content:center;" onclick="addAlert()">+ Add Alert Investigation</button>
+  </div>
+
+  <!-- BEC CASE DROPS -->
+  <div class="ed-section">
+    <div class="ed-section-title">BEC Case Drops</div>
+    <div class="ed-section-sub">One entry per completed BEC investigation in the SOCSIM lab</div>
+    <div class="inv-container" id="bec-container"></div>
+    <button class="btn btn-add" style="margin-top:14px;width:100%;justify-content:center;" onclick="addBEC()">+ Add BEC Case Drop</button>
+  </div>
+
+</div>
+
+<!-- ── ACTION BAR ──────────────────────────────────── -->
+<div class="action-bar">
+  <div class="action-bar-hint" id="save-status">Load from GitHub → add investigation → Publish → site updates in ~60 s</div>
+  <div class="action-bar-right">
+    <button class="btn btn-green btn-sm" onclick="loadFromGitHub()">⬇ Load from GitHub</button>
+    <button class="btn btn-primary js-publish" onclick="publishToGitHub()">⬆ Publish to GitHub</button>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════ */
+const esc = s => String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const val = el => (el?.value??'').trim();
+// Profile links (LinkedIn/GitHub) render as a raw <a href>, so a value typed
+// without a protocol (e.g. "www.linkedin.com/in/…") resolves as a path
+// relative to the site instead of an external link. Add https:// when missing.
+const urlVal = el => {
+  const v = val(el);
+  return v && !/^[a-z][a-z0-9+.-]*:/i.test(v) ? `https://${v}` : v;
+};
+const arr = v => Array.isArray(v) ? v : []; // tolerate hand-edited JSON
+let alertCount = 0, becCount = 0;
+
+function selectTheme(name) {
+  // Unknown theme name (hand-edited JSON) → fall back to the default
+  if (!document.querySelector(`.theme-swatch[data-theme="${name}"]`)) name = 'operator';
+  document.getElementById('p-theme').value = name;
+  document.querySelectorAll('.theme-swatch').forEach(s => {
+    s.classList.toggle('active', s.dataset.theme === name);
+  });
+}
+
+/* ── SAVE STATUS ──
+   Tracks whether the form differs from the last published/loaded state and
+   shows it in the action bar. `dirty` is a cheap hint set by input events;
+   autosave() does the authoritative JSON comparison every 30 s. */
+let populating = false; // suppress dirty-marking while programmatically filling the form
+
+function markDirty() {
+  if (populating) return;
+  renderSaveStatus('dirty');
+}
+
+function renderSaveStatus(state, detail = '') {
+  const el = document.getElementById('save-status');
+  if (!el) return;
+  if (state === 'dirty') {
+    el.textContent = '● Unpublished changes' + (detail ? ` — ${detail}` : '');
+    el.className = 'action-bar-hint status-dirty';
+  } else if (state === 'clean') {
+    el.textContent = '✓ All changes published';
+    el.className = 'action-bar-hint status-clean';
+  } else {
+    el.textContent = 'Load from GitHub → add investigation → Publish → site updates in ~60 s';
+    el.className = 'action-bar-hint';
+  }
+  document.querySelectorAll('.js-publish').forEach(b => b.classList.toggle('attn', state === 'dirty'));
+}
+
+document.addEventListener('input', e => {
+  if (e.target.closest('.ed-body') && !e.target.closest('.gh-panel')) markDirty();
+});
+
+function showNotif(msg, type='success', ms=5000) {
+  const n = document.getElementById('notif');
+  n.textContent = msg;
+  n.className = type;
+  n.style.display = 'block';
+  n.style.opacity = '1';
+  setTimeout(() => { n.style.opacity='0'; setTimeout(()=>n.style.display='none',300); }, ms);
+}
+
+/* ═══════════════════════════════════════════════════
+   GITHUB SETTINGS
+═══════════════════════════════════════════════════ */
+function toggleGHPanel() {
+  const body = document.getElementById('gh-body');
+  const caret = document.getElementById('gh-caret');
+  const hidden = body.classList.toggle('hidden');
+  caret.textContent = hidden ? '▶' : '▼';
+}
+
+function saveGHSettings() {
+  let owner = val(document.getElementById('gh-owner'));
+  let repo  = val(document.getElementById('gh-repo'));
+  let token = val(document.getElementById('gh-token')).replace(/\s+/g, '');
+  if (!owner || !repo || !token) { showNotif('Fill in all three GitHub fields.', 'error'); return; }
+
+  // Forgive common paste mistakes: full URLs, owner/repo combos, @handles, .git suffixes
+  owner = owner.replace(/^https?:\/\/(www\.)?github\.com\//i, '').replace(/^@/, '').split('/').filter(Boolean)[0] ?? '';
+  repo  = repo.replace(/^https?:\/\/(www\.)?github\.com\//i, '').replace(/\.git$/i, '').replace(/\/+$/, '');
+  if (repo.includes('/')) repo = repo.split('/').filter(Boolean).pop();
+  if (!owner || !repo) { showNotif('Could not read a username / repo name from what you pasted — enter just the names, e.g. "dalancoburn" and "socsim-portfolio".', 'error', 8000); return; }
+
+  document.getElementById('gh-owner').value = owner;
+  document.getElementById('gh-repo').value  = repo;
+  localStorage.setItem('gh_owner', owner);
+  localStorage.setItem('gh_repo',  repo);
+  localStorage.setItem('gh_token', token);
+  updateGHStatus();
+  toggleGHPanel();
+
+  // If the form is still empty, pull the member's existing portfolio right
+  // away so they never start typing into a blank editor by mistake.
+  const cur = collectData();
+  if (!cur.profile.name && !cur.alerts.length && !cur.bec.length) {
+    showNotif('GitHub settings saved — loading your portfolio…');
+    loadFromGitHub();
+  } else {
+    showNotif('GitHub settings saved. Click ⬇ Load from GitHub to pull in your published portfolio.', 'success', 6000);
+  }
+}
+
+function loadGHSettings() {
+  const owner = localStorage.getItem('gh_owner') ?? '';
+  const repo  = localStorage.getItem('gh_repo')  ?? '';
+  const token = localStorage.getItem('gh_token') ?? '';
+  document.getElementById('gh-owner').value = owner;
+  document.getElementById('gh-repo').value  = repo;
+  document.getElementById('gh-token').value = token;
+  updateGHStatus();
+  if (owner && repo && token) toggleGHPanel(); // collapse if already set
+}
+
+function updateGHStatus() {
+  const connected = !!(localStorage.getItem('gh_owner') && localStorage.getItem('gh_repo') && localStorage.getItem('gh_token'));
+  document.getElementById('gh-status').style.display = connected ? 'inline-flex' : 'none';
+}
+
+/* ═══════════════════════════════════════════════════
+   ALERT BLOCK TEMPLATE
+═══════════════════════════════════════════════════ */
+function alertBlockHTML(uid, num) {
+  return `<div class="inv-block" data-uid="${uid}" data-type="alert">
+  <div class="inv-block-header" onclick="toggleBlock('${uid}')" title="Click to collapse / expand">
+    <span class="inv-caret">▼</span>
+    <span class="inv-type-badge badge-alert">Alert</span>
+    <span class="inv-summary"></span>
+    <span class="inv-num">#${num}</span>
+    <button class="btn btn-danger" onclick="event.stopPropagation();removeBlock('${uid}')">Remove</button>
+  </div>
+  <div class="inv-body">
+
+    <div class="inv-sub">
+      <div class="form-row four">
+        <div class="form-field">
+          <label class="form-label">Case ID</label>
+          <input type="text" class="form-input" data-f="id" placeholder="ALT-001" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Date Investigated</label>
+          <input type="date" class="form-input" data-f="date" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Severity</label>
+          <select class="form-select" data-f="severity">
+            <option>Critical</option><option selected>High</option><option>Medium</option><option>Low</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Alert ID <span class="form-hint">optional</span></label>
+          <input type="text" class="form-input" data-f="alertId" placeholder="MDE-ALERT-…" />
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-field">
+          <label class="form-label">Alert Name</label>
+          <input type="text" class="form-input" data-f="alertName" placeholder="e.g. Suspicious Encoded PowerShell Command" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Host / Account Affected</label>
+          <input type="text" class="form-input" data-f="hostOrAccount" placeholder="HOSTNAME / user@domain.com" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Date & Time of Alert</label>
+          <input type="text" class="form-input" data-f="dateTime" placeholder="14 Nov 2024 09:47 UTC" />
+        </div>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <div class="inv-sub">
+      <div class="sub-label">Alert Summary</div>
+      <div class="form-row full">
+        <div class="form-field">
+          <label class="form-label">What triggered the alert</label>
+          <textarea class="form-textarea" data-f="whatTriggered" rows="2" placeholder="Which rule fired, on which process/activity."></textarea>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-field">
+          <label class="form-label">Why it triggered <span class="form-hint">the detection logic</span></label>
+          <textarea class="form-textarea" data-f="whyTriggered" rows="2" placeholder="The detection rule / logic that caused the alert to fire."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <div class="inv-sub">
+      <div class="sub-label">Investigation Findings</div>
+      <div class="form-row full">
+        <div class="form-field">
+          <label class="form-label">What happened</label>
+          <textarea class="form-textarea" data-f="whatHappened" rows="4" placeholder="Walk through what actually occurred — the attack or activity in plain terms."></textarea>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-field">
+          <label class="form-label">Evidence <span class="form-hint">artefacts, log entries, indicators</span></label>
+          <textarea class="form-textarea" data-f="evidence" rows="4" placeholder="Process trees, decoded commands, network connections, etc."></textarea>
+        </div>
+      </div>
+      <div class="form-row three">
+        <div class="form-field">
+          <label class="form-label">Was the activity successful?</label>
+          <select class="form-select" data-f="wasSuccessful">
+            <option>Yes</option><option selected>No</option><option>Unknown</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Verdict</label>
+          <select class="form-select" data-f="verdict">
+            <option selected>Malicious</option><option>Non-malicious</option><option>Suspicious</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Categorisation</label>
+          <select class="form-select" data-f="categorisation">
+            <option value="TP" selected>True Positive (TP)</option>
+            <option value="BTP">Benign True Positive (BTP)</option>
+            <option value="FP">False Positive (FP)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-field">
+          <label class="form-label">Verdict Justification</label>
+          <textarea class="form-textarea" data-f="verdictJustification" rows="3" placeholder="Why did you reach this conclusion? Be specific."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <div class="inv-sub">
+      <div class="sub-label">Investigation Steps</div>
+      <div class="rep-rows" data-rep="steps"></div>
+      <button class="btn btn-add btn-sm" onclick="addStep(this)">+ Add Step</button>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <div class="inv-sub">
+      <div class="sub-label">KQL Queries Used <span class="form-hint" style="margin-left:6px;">paste raw KQL — line breaks preserved</span></div>
+      <textarea class="form-textarea" data-f="queries" rows="5" style="font-family:'JetBrains Mono',monospace;font-size:.78rem;" placeholder="// Paste your KQL queries here, separated by blank lines"></textarea>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <div class="inv-sub">
+      <div class="sub-label">Recommended Actions</div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Escalation</label>
+          <select class="form-select" data-f="escalation">
+            <option>Urgent</option><option>Non-urgent</option><option>None</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Alert Tuning</label>
+          <input type="text" class="form-input" data-f="alertTuning" placeholder="Tune recommended / No tuning required" />
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-field">
+          <label class="form-label">Containment / Next Steps</label>
+          <textarea class="form-textarea" data-f="containment" rows="3" placeholder="What actions were taken or should be taken?"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <div class="inv-sub">
+      <div class="form-row full">
+        <div class="form-field">
+          <label class="form-label">Lessons Learned</label>
+          <textarea class="form-textarea" data-f="lessonsLearned" rows="3" placeholder="What would you do differently? What does this case teach you?"></textarea>
+        </div>
+      </div>
+      <div class="form-row full" style="margin-top:4px;">
+        <div class="form-field">
+          <label class="form-label">Tools Used <span class="form-hint">one per line</span></label>
+          <textarea class="form-textarea" data-f="tools" rows="3" placeholder="Microsoft Defender for Endpoint&#10;KQL&#10;CyberChef"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <div class="inv-sub">
+      <div class="sub-label">Custom Sections <span class="form-hint" style="margin-left:6px;">optional — your own headings, e.g. MITRE ATT&amp;CK Mapping, References</span></div>
+      <div class="rep-rows" data-rep="custom"></div>
+      <button class="btn btn-add btn-sm" onclick="addCustomSection(this)">+ Add Custom Section</button>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <div class="inv-sub">
+      <div class="verified-row">
+        <input type="checkbox" data-f="verified" id="ver-${uid}" />
+        <label for="ver-${uid}"><strong>SOCSIM Verified</strong> — mark as completed in a live SOCSIM lab</label>
+      </div>
+    </div>
+
+  </div>
+</div>`;
+}
+
+/* ═══════════════════════════════════════════════════
+   BEC BLOCK TEMPLATE
+═══════════════════════════════════════════════════ */
+function becBlockHTML(uid, num) {
+  return `<div class="inv-block" data-uid="${uid}" data-type="bec">
+  <div class="inv-block-header" onclick="toggleBlock('${uid}')" title="Click to collapse / expand">
+    <span class="inv-caret">▼</span>
+    <span class="inv-type-badge badge-bec">BEC Case Drop</span>
+    <span class="inv-summary"></span>
+    <span class="inv-num">#${num}</span>
+    <button class="btn btn-danger" onclick="event.stopPropagation();removeBlock('${uid}')">Remove</button>
+  </div>
+  <div class="inv-body">
+
+    <div class="inv-sub">
+      <div class="form-row four">
+        <div class="form-field">
+          <label class="form-label">Case ID</label>
+          <input type="text" class="form-input" data-f="id" placeholder="BEC-001" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Case Reference</label>
+          <input type="text" class="form-input" data-f="caseReference" placeholder="WDL-BEC-2024-001" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Incident From</label>
+          <input type="date" class="form-input" data-f="incidentDateFrom" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Incident To</label>
+          <input type="date" class="form-input" data-f="incidentDateTo" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Case Name</label>
+          <input type="text" class="form-input" data-f="caseName" placeholder="BEC Case Drop 1 — Brief Description" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Affected Account</label>
+          <input type="text" class="form-input" data-f="affectedAccount" placeholder="user@domain.com" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Investigation Date</label>
+          <input type="date" class="form-input" data-f="investigationDate" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">PDF Report URL <span class="form-hint">optional — link to hosted PDF</span></label>
+          <input type="url" class="form-input" data-f="pdfUrl" placeholder="https://…/report.pdf" />
+        </div>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <div class="inv-sub">
+      <div class="form-row full">
+        <div class="form-field">
+          <label class="form-label">Attack Narrative <span class="form-hint">plain-English summary — write this last, from a non-technical perspective</span></label>
+          <textarea class="form-textarea" data-f="attackNarrative" rows="5" placeholder="What happened, how, and the outcome. Keep it clear enough for a non-technical stakeholder."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <div class="inv-sub">
+      <div class="sub-label">Timeline of Events <span class="form-hint" style="margin-left:6px;">UTC throughout</span></div>
+      <div class="rep-rows" data-rep="timeline"></div>
+      <button class="btn btn-add btn-sm" onclick="addBECTimelineRow(this)">+ Add Timeline Entry</button>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <div class="inv-sub">
+      <div class="sub-label">Findings</div>
+      <div class="form-row full" style="margin-bottom:12px;">
+        <div class="form-field">
+          <label class="form-label">3.1 — Initial Access</label>
+          <textarea class="form-textarea" data-f="initialAccess" rows="4" placeholder="How did the threat actor gain access? First confirmed malicious sign-in, source IP, application used."></textarea>
+        </div>
+      </div>
+      <div class="form-row full" style="margin-bottom:12px;">
+        <div class="form-field">
+          <label class="form-label">3.2 — Unauthorised Activity</label>
+          <textarea class="form-textarea" data-f="unauthorisedActivity" rows="4" placeholder="What did the threat actor do once inside? Inbox rules, sent emails, account changes, etc."></textarea>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-field">
+          <label class="form-label">3.3 — Data Access</label>
+          <textarea class="form-textarea" data-f="dataAccess" rows="4" placeholder="What data was accessed or potentially exfiltrated? Cover Exchange and SharePoint/OneDrive separately."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <div class="inv-sub">
+      <div class="form-row full">
+        <div class="form-field">
+          <label class="form-label">Lessons Learned</label>
+          <textarea class="form-textarea" data-f="lessonsLearned" rows="3" placeholder="What would you approach differently? What does this case teach you?"></textarea>
+        </div>
+      </div>
+      <div class="form-row full" style="margin-top:4px;">
+        <div class="form-field">
+          <label class="form-label">Tools Used <span class="form-hint">one per line</span></label>
+          <textarea class="form-textarea" data-f="tools" rows="3" placeholder="Microsoft Sentinel&#10;KQL&#10;Microsoft Graph API"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <div class="inv-sub">
+      <div class="sub-label">Custom Sections <span class="form-hint" style="margin-left:6px;">optional — your own headings, e.g. MITRE ATT&amp;CK Mapping, References</span></div>
+      <div class="rep-rows" data-rep="custom"></div>
+      <button class="btn btn-add btn-sm" onclick="addCustomSection(this)">+ Add Custom Section</button>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <div class="inv-sub">
+      <div class="verified-row">
+        <input type="checkbox" data-f="verified" id="ver-${uid}" />
+        <label for="ver-${uid}"><strong>SOCSIM Verified</strong> — mark as completed in a live SOCSIM lab</label>
+      </div>
+    </div>
+
+  </div>
+</div>`;
+}
+
+/* ═══════════════════════════════════════════════════
+   ROW TEMPLATES
+═══════════════════════════════════════════════════ */
+function stepRowHTML(text) {
+  return `<div class="rep-row step-row">
+    <div class="rep-cell">
+      <input type="text" class="form-input" data-sub="step" value="${esc(text)}" placeholder="Describe this investigation step" />
+    </div>
+    <div class="rep-remove"><button class="btn btn-danger" onclick="this.closest('.rep-row').remove()">×</button></div>
+  </div>`;
+}
+
+function becTLRowHTML(time, activity, detail) {
+  return `<div class="rep-row bec-tl-row">
+    <div class="rep-cell">
+      <span class="rep-cell-label">Time (UTC)</span>
+      <input type="text" class="form-input" data-sub="time" value="${esc(time)}" placeholder="02:14 UTC" />
+    </div>
+    <div class="rep-cell">
+      <span class="rep-cell-label">Activity</span>
+      <input type="text" class="form-input" data-sub="activity" value="${esc(activity)}" placeholder="Short activity label" />
+    </div>
+    <div class="rep-cell">
+      <span class="rep-cell-label">Detail</span>
+      <input type="text" class="form-input" data-sub="detail" value="${esc(detail)}" placeholder="Longer description of what happened" />
+    </div>
+    <div class="rep-remove"><button class="btn btn-danger" onclick="this.closest('.rep-row').remove()">×</button></div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════
+   EASYMDE INSTANCE REGISTRY
+   Key format: "uid:fieldName"
+═══════════════════════════════════════════════════ */
+const mdes = {};
+
+const ALERT_MDE_FIELDS = ['whyTriggered','whatHappened','evidence','verdictJustification','containment','lessonsLearned'];
+const BEC_MDE_FIELDS   = ['attackNarrative','initialAccess','unauthorisedActivity','dataAccess','lessonsLearned'];
+
+// The camera button uploads straight to the member's repo when GitHub
+// settings are saved; otherwise it falls back to the manual how-to modal.
+let activeUploadMDE = null;
+
+const MDE_TOOLBAR = [
+  'bold','italic','|',
+  'unordered-list','ordered-list','|',
+  'code','|',
+  {
+    name:'screenshot', title:'Upload Screenshot',
+    className:'fa fa-camera',
+    action: (editor) => {
+      activeUploadMDE = editor;
+      const connected = !!(localStorage.getItem('gh_owner')?.trim() &&
+                           localStorage.getItem('gh_repo')?.trim() &&
+                           localStorage.getItem('gh_token')?.trim());
+      if (connected) document.getElementById('img-input').click();
+      else document.getElementById('screenshot-help').classList.add('open');
+    },
+  },
+  'image','link','|',
+  'preview',
+];
+
+async function uploadScreenshot(input) {
+  const file = input.files[0];
+  input.value = '';
+  if (!file || !activeUploadMDE) return;
+
+  const owner = localStorage.getItem('gh_owner')?.trim();
+  const repo  = localStorage.getItem('gh_repo')?.trim();
+  const token = localStorage.getItem('gh_token')?.trim();
+  if (!owner || !repo || !token) {
+    document.getElementById('screenshot-help').classList.add('open');
+    return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    showNotif('✗ Image is larger than 10 MB — compress the screenshot and try again.', 'error', 8000);
+    return;
+  }
+
+  showNotif('Uploading screenshot…', 'success', 60000);
+  try {
+    const base64 = await new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result).split(',')[1]);
+      r.onerror = () => reject(new Error('Could not read the image file'));
+      r.readAsDataURL(file);
+    });
+
+    // Timestamp prefix keeps every upload path unique — no collisions, no sha juggling
+    const safe = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, '-').replace(/^-+|-+$/g, '') || 'screenshot.png';
+    const path = `src/assets/${Date.now()}-${safe}`;
+
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: `Add screenshot ${safe} via SOCSIM editor`, content: base64 }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      showNotif(`✗ Upload failed: ${ghErrorHint(res.status, err.message)}`, 'error', 9000);
+      return;
+    }
+
+    const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/main/${path}`;
+    const alt = safe.replace(/\.[a-z0-9]+$/, '').replace(/[-_]+/g, ' ').trim() || 'screenshot';
+    activeUploadMDE.codemirror.replaceSelection(`![${alt}](${rawUrl})`);
+    showNotif('✓ Screenshot uploaded and inserted.', 'success', 5000);
+  } catch (e) {
+    showNotif(`✗ Upload failed: ${e.message}`, 'error', 8000);
+  }
+}
+
+let mdeWarned = false;
+
+function initMDEs(block, uid, type) {
+  // If the EasyMDE CDN failed to load (offline, blocked network), fall back
+  // to the plain textareas — everything still works, just without the toolbar.
+  if (typeof EasyMDE === 'undefined') {
+    if (!mdeWarned) {
+      mdeWarned = true;
+      showNotif('Formatting toolbar unavailable (couldn’t reach CDN) — plain text editing still works fine.', 'error', 7000);
+    }
+    return;
+  }
+  const fields = type === 'alert' ? ALERT_MDE_FIELDS : BEC_MDE_FIELDS;
+  fields.forEach(field => {
+    const el = block.querySelector(`[data-f="${field}"]`);
+    if (!el) return;
+    const key = `${uid}:${field}`;
+    try {
+      mdes[key] = new EasyMDE({
+        element: el,
+        toolbar: MDE_TOOLBAR,
+        spellChecker: false,
+        status: false,
+        autofocus: false,
+        minHeight: el.rows >= 4 ? '120px' : '90px',
+        placeholder: el.placeholder || '',
+        promptURLs: true,
+      });
+      mdes[key].codemirror.on('change', markDirty);
+    } catch (e) {
+      // One broken field must never take down the whole block
+      delete mdes[key];
+    }
+  });
+}
+
+function getMDE(uid, field) {
+  const key = `${uid}:${field}`;
+  return mdes[key] ? mdes[key].value() : '';
+}
+
+function setMDE(uid, field, value, block) {
+  const key = `${uid}:${field}`;
+  if (mdes[key]) {
+    mdes[key].value(value ?? '');
+  } else if (block) {
+    // EasyMDE not active — write straight to the underlying textarea
+    const el = block.querySelector(`[data-f="${field}"]`);
+    if (el) el.value = value ?? '';
+  }
+}
+
+function destroyMDEs(uid) {
+  Object.keys(mdes).filter(k => k.startsWith(uid + ':')).forEach(k => {
+    try { mdes[k].toTextArea(); } catch {}
+    delete mdes[k];
+  });
+}
+
+/* ═══════════════════════════════════════════════════
+   ADD / REMOVE BLOCKS
+═══════════════════════════════════════════════════ */
+function addAlert(data) {
+  alertCount++;
+  const uid = 'alt-' + Date.now() + alertCount;
+  const el = document.createElement('div');
+  el.innerHTML = alertBlockHTML(uid, alertCount);
+  const block = el.firstElementChild;
+  document.getElementById('alerts-container').appendChild(block);
+  initMDEs(block, uid, 'alert');
+  if (data) {
+    populateAlertBlock(block, data, uid);
+    toggleBlock(uid, true); // loaded cases start collapsed — headers only
+  } else {
+    markDirty();
+  }
+}
+
+function addBEC(data) {
+  becCount++;
+  const uid = 'bec-' + Date.now() + becCount;
+  const el = document.createElement('div');
+  el.innerHTML = becBlockHTML(uid, becCount);
+  const block = el.firstElementChild;
+  document.getElementById('bec-container').appendChild(block);
+  initMDEs(block, uid, 'bec');
+  if (data) {
+    populateBECBlock(block, data, uid);
+    toggleBlock(uid, true);
+  } else {
+    markDirty();
+  }
+}
+
+/* Collapse / expand a case block. force: true = collapse, false = expand,
+   undefined = toggle. */
+function toggleBlock(uid, force) {
+  const block = document.querySelector(`[data-uid="${uid}"]`);
+  if (!block) return;
+  const body = block.querySelector('.inv-body');
+  const collapsed = body.classList.toggle('hidden', force);
+  const caret = block.querySelector('.inv-caret');
+  if (caret) caret.textContent = collapsed ? '▶' : '▼';
+  const sum = block.querySelector('.inv-summary');
+  if (collapsed) {
+    const id = val(f(block, 'id'));
+    const name = val(f(block, 'alertName')) || val(f(block, 'caseName'));
+    if (sum) sum.textContent = [id, name].filter(Boolean).join(' — ') || 'Untitled';
+  } else {
+    if (sum) sum.textContent = '';
+    // CodeMirror measures itself while hidden as zero-size — refresh on reveal
+    Object.keys(mdes).filter(k => k.startsWith(uid + ':')).forEach(k => {
+      try { mdes[k].codemirror.refresh(); } catch {}
+    });
+  }
+}
+
+// Counts deliberate deletions this session. Publishing fewer cases than
+// GitHub has is only ever allowed when this is > 0 — a blank/partial form
+// (new device, failed load) must never be able to wipe a portfolio.
+let removedCases = 0;
+
+function removeBlock(uid) {
+  const block = document.querySelector(`[data-uid="${uid}"]`);
+  if (!block) return;
+  const id = val(block.querySelector('[data-f="id"]'));
+  const label = id ? `case "${id}"` : 'this case';
+  if (!confirm(`Remove ${label} from the form?\n\nIt will be deleted from your live portfolio when you next publish.`)) return;
+  destroyMDEs(uid);
+  block.remove();
+  removedCases++;
+  markDirty();
+}
+
+function addStep(btn, text) {
+  const container = btn.previousElementSibling;
+  const el = document.createElement('div');
+  el.innerHTML = stepRowHTML(text ?? '');
+  container.appendChild(el.firstElementChild);
+  markDirty();
+}
+
+function addBECTimelineRow(btn, time, activity, detail) {
+  const container = btn.previousElementSibling;
+  const el = document.createElement('div');
+  el.innerHTML = becTLRowHTML(time ?? '', activity ?? '', detail ?? '');
+  container.appendChild(el.firstElementChild);
+}
+
+/* ── CUSTOM SECTIONS ──
+   Member-defined headings with Markdown content, rendered after the fixed
+   sections on the live site. MDE instances are keyed under the block uid
+   ("uid:cs:N") so destroyMDEs / populateForm cleanup covers them. */
+let csCount = 0;
+
+function addCustomSection(btn, title, content) {
+  const block = btn.closest('.inv-block');
+  const uid = block.dataset.uid;
+  const key = `${uid}:cs:${Date.now()}${++csCount}`;
+  const container = btn.previousElementSibling;
+  const el = document.createElement('div');
+  el.innerHTML = `<div class="cs-row" data-cskey="${key}">
+    <div class="cs-row-head">
+      <input type="text" class="form-input" data-sub="cs-title" value="${esc(title ?? '')}" placeholder="Section title — e.g. MITRE ATT&amp;CK Mapping" />
+      <button class="btn btn-danger" onclick="removeCustomSection(this)">×</button>
+    </div>
+    <textarea class="form-textarea" data-sub="cs-content" rows="4" placeholder="Section content — Markdown supported"></textarea>
+  </div>`;
+  const row = el.firstElementChild;
+  container.appendChild(row);
+  const ta = row.querySelector('[data-sub="cs-content"]');
+  ta.value = content ?? '';
+  if (typeof EasyMDE !== 'undefined') {
+    try {
+      mdes[key] = new EasyMDE({
+        element: ta, toolbar: MDE_TOOLBAR, spellChecker: false, status: false,
+        autofocus: false, minHeight: '100px',
+        placeholder: 'Section content — Markdown supported', promptURLs: true,
+      });
+      if (content) mdes[key].value(content);
+      mdes[key].codemirror.on('change', markDirty);
+    } catch { delete mdes[key]; }
+  }
+}
+
+function removeCustomSection(btn) {
+  const row = btn.closest('.cs-row');
+  const key = row?.dataset.cskey;
+  if (key && mdes[key]) { try { mdes[key].toTextArea(); } catch {} delete mdes[key]; }
+  row?.remove();
+  markDirty();
+}
+
+/* ═══════════════════════════════════════════════════
+   POPULATE FROM DATA
+═══════════════════════════════════════════════════ */
+function f(block, field) { return block.querySelector(`[data-f="${field}"]`); }
+
+function collectCustomSections(block) {
+  const sections = [];
+  block.querySelectorAll('[data-rep="custom"] .cs-row').forEach(row => {
+    const title = val(row.querySelector('[data-sub="cs-title"]'));
+    const key = row.dataset.cskey;
+    const content = (mdes[key] ? mdes[key].value() : row.querySelector('[data-sub="cs-content"]')?.value ?? '').trim();
+    if (title || content) sections.push({ title, content });
+  });
+  return sections;
+}
+
+// Setting a <select> to a value with no matching option silently blanks it,
+// and the blank would then be collected as '' on publish — keep the default instead.
+function safeSet(block, field, v) {
+  const el = f(block, field);
+  if (!el) return;
+  const value = v ?? '';
+  if (el.tagName === 'SELECT') {
+    if ([...el.options].some(o => o.value === value)) el.value = value;
+  } else {
+    el.value = value;
+  }
+}
+
+function populateAlertBlock(block, d, uid) {
+  const set = (field, v) => safeSet(block, field, v);
+  // plain inputs / selects / non-MDE textareas
+  set('id', d.id); set('alertName', d.alertName); set('alertId', d.alertId ?? '');
+  set('date', d.date); set('severity', d.severity); set('hostOrAccount', d.hostOrAccount);
+  set('dateTime', d.dateTime); set('whatTriggered', d.whatTriggered);
+  set('wasSuccessful', d.wasSuccessful); set('verdict', d.verdict);
+  set('categorisation', d.categorisation); set('queries', d.queries ?? '');
+  set('escalation', d.escalation); set('alertTuning', d.alertTuning ?? '');
+  set('tools', arr(d.tools).join('\n'));
+  const vc = f(block, 'verified'); if (vc) vc.checked = d.verified ?? false;
+  // MDE fields — must call after initMDEs
+  setMDE(uid, 'whyTriggered', d.whyTriggered, block);
+  setMDE(uid, 'whatHappened', d.whatHappened, block);
+  setMDE(uid, 'evidence', d.evidence, block);
+  setMDE(uid, 'verdictJustification', d.verdictJustification, block);
+  setMDE(uid, 'containment', d.containment, block);
+  setMDE(uid, 'lessonsLearned', d.lessonsLearned, block);
+
+  const stepBtn = block.querySelector('[data-rep="steps"] + button');
+  arr(d.investigationSteps).forEach(s => addStep(stepBtn, s));
+
+  const csBtn = block.querySelector('[data-rep="custom"] + button');
+  arr(d.customSections).forEach(s => addCustomSection(csBtn, s?.title, s?.content));
+}
+
+function populateBECBlock(block, d, uid) {
+  const set = (field, v) => safeSet(block, field, v);
+  set('id', d.id); set('caseName', d.caseName); set('caseReference', d.caseReference);
+  set('affectedAccount', d.affectedAccount); set('incidentDateFrom', d.incidentDateFrom);
+  set('incidentDateTo', d.incidentDateTo); set('investigationDate', d.investigationDate);
+  set('tools', arr(d.tools).join('\n')); set('pdfUrl', d.pdfUrl ?? '');
+  const vc = f(block, 'verified'); if (vc) vc.checked = d.verified ?? false;
+  // MDE fields
+  setMDE(uid, 'attackNarrative', d.attackNarrative, block);
+  setMDE(uid, 'initialAccess', d.initialAccess, block);
+  setMDE(uid, 'unauthorisedActivity', d.unauthorisedActivity, block);
+  setMDE(uid, 'dataAccess', d.dataAccess, block);
+  setMDE(uid, 'lessonsLearned', d.lessonsLearned, block);
+
+  const tlBtn = block.querySelector('[data-rep="timeline"] + button');
+  arr(d.timeline).forEach(e => addBECTimelineRow(tlBtn, e?.time, e?.activity, e?.detail ?? ''));
+
+  const csBtn = block.querySelector('[data-rep="custom"] + button');
+  arr(d.customSections).forEach(s => addCustomSection(csBtn, s?.title, s?.content));
+}
+
+/* ═══════════════════════════════════════════════════
+   COLLECT FORM DATA
+═══════════════════════════════════════════════════ */
+function collectData() {
+  const profile = {
+    name:     val(document.getElementById('p-name')),
+    role:     val(document.getElementById('p-role')),
+    tagline:  val(document.getElementById('p-tagline')),
+    location: val(document.getElementById('p-location')),
+    photo:    val(document.getElementById('p-photo')),
+    theme:    document.getElementById('p-theme').value || 'operator',
+    links: {
+      linkedin: urlVal(document.getElementById('p-linkedin')),
+      github:   urlVal(document.getElementById('p-github')),
+      email:    val(document.getElementById('p-email')),
+    },
+  };
+
+  const alerts = [];
+  document.querySelectorAll('[data-type="alert"]').forEach(block => {
+    const uid = block.dataset.uid;
+    const get = field => val(f(block, field));
+    const mget = field => getMDE(uid, field) || get(field); // prefer MDE value
+    const tools = get('tools').split('\n').map(s=>s.trim()).filter(Boolean);
+    const steps = [];
+    block.querySelectorAll('[data-rep="steps"] [data-sub="step"]').forEach(el => {
+      const s = val(el); if (s) steps.push(s);
+    });
+    alerts.push({
+      id: get('id'), alertName: get('alertName'), alertId: get('alertId'),
+      date: get('date'), severity: get('severity'), hostOrAccount: get('hostOrAccount'),
+      dateTime: get('dateTime'), whatTriggered: get('whatTriggered'),
+      whyTriggered: mget('whyTriggered'), whatHappened: mget('whatHappened'),
+      evidence: mget('evidence'), wasSuccessful: get('wasSuccessful'),
+      verdict: get('verdict'), verdictJustification: mget('verdictJustification'),
+      investigationSteps: steps, queries: get('queries'),
+      categorisation: get('categorisation'), escalation: get('escalation'),
+      containment: mget('containment'), alertTuning: get('alertTuning'),
+      lessonsLearned: mget('lessonsLearned'), tools,
+      customSections: collectCustomSections(block),
+      verified: f(block, 'verified')?.checked ?? false,
+    });
+  });
+
+  const bec = [];
+  document.querySelectorAll('[data-type="bec"]').forEach(block => {
+    const uid = block.dataset.uid;
+    const get = field => val(f(block, field));
+    const mget = field => getMDE(uid, field) || get(field);
+    const tools = get('tools').split('\n').map(s=>s.trim()).filter(Boolean);
+    const timeline = [];
+    block.querySelectorAll('[data-rep="timeline"] .rep-row').forEach(row => {
+      const time     = val(row.querySelector('[data-sub="time"]'));
+      const activity = val(row.querySelector('[data-sub="activity"]'));
+      const detail   = val(row.querySelector('[data-sub="detail"]'));
+      if (time || activity) timeline.push({ time, activity, detail });
+    });
+    bec.push({
+      id: get('id'), caseName: get('caseName'), caseReference: get('caseReference'),
+      affectedAccount: get('affectedAccount'), incidentDateFrom: get('incidentDateFrom'),
+      incidentDateTo: get('incidentDateTo'), investigationDate: get('investigationDate'),
+      attackNarrative: mget('attackNarrative'), timeline,
+      initialAccess: mget('initialAccess'), unauthorisedActivity: mget('unauthorisedActivity'),
+      dataAccess: mget('dataAccess'), lessonsLearned: mget('lessonsLearned'),
+      tools, pdfUrl: get('pdfUrl'),
+      customSections: collectCustomSections(block),
+      verified: f(block, 'verified')?.checked ?? false,
+    });
+  });
+
+  return { profile, alerts, bec };
+}
+
+/* ═══════════════════════════════════════════════════
+   DOWNLOAD JSON
+═══════════════════════════════════════════════════ */
+function downloadJSON() {
+  const json = JSON.stringify(collectData(), null, 2);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([json], {type:'application/json'}));
+  a.download = 'portfolio.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+/* ═══════════════════════════════════════════════════
+   UPDATE FROM TEMPLATE
+   Triggers the update-template.yml workflow via the
+   GitHub Actions API. Pulls latest components/styles/
+   editor from the SOCSIM template — never touches
+   the member's portfolio.json.
+═══════════════════════════════════════════════════ */
+async function updateFromTemplate() {
+  const owner = localStorage.getItem('gh_owner')?.trim();
+  const repo  = localStorage.getItem('gh_repo')?.trim();
+  const token = localStorage.getItem('gh_token')?.trim();
+
+  if (!owner || !repo || !token) {
+    showNotif('Set up your GitHub settings first (click ⚙ above).', 'error', 6000);
+    return;
+  }
+
+  if (!confirm(
+    'This will pull the latest components, styles, and editor from the SOCSIM template.\n\n' +
+    'Your portfolio data (investigations + profile) will NOT be changed.\n\n' +
+    'Continue?'
+  )) return;
+
+  showNotif('Triggering update…', 'success', 30000);
+
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/actions/workflows/update-template.yml/dispatches`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ref: 'main' }),
+      }
+    );
+
+    if (res.status === 204) {
+      showNotif(
+        `✓ Update started — check progress at github.com/${owner}/${repo}/actions`,
+        'success', 8000
+      );
+    } else {
+      const err = await res.json().catch(() => ({}));
+      showNotif(`✗ ${err.message ?? 'Could not trigger workflow. Make sure the update-template.yml workflow exists in your repo.'}`, 'error', 8000);
+    }
+  } catch (e) {
+    showNotif(`✗ ${e.message}`, 'error', 8000);
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   LOAD FROM GITHUB
+   Fetches the current portfolio.json straight from the repo
+   so members don't need to download/re-upload anything.
+═══════════════════════════════════════════════════ */
+async function loadFromGitHub(silent = false) {
+  const owner = localStorage.getItem('gh_owner')?.trim();
+  const repo  = localStorage.getItem('gh_repo')?.trim();
+  const token = localStorage.getItem('gh_token')?.trim();
+
+  if (!owner || !repo || !token) {
+    if (!silent) showNotif('Set up your GitHub settings first (click ⚙ above).', 'error', 6000);
+    return;
+  }
+
+  // Don't blow away unpublished edits without asking
+  if (!silent) {
+    const cur = collectData();
+    const hasContent = cur.profile.name || cur.alerts.length || cur.bec.length;
+    if (hasContent && JSON.stringify(cur) !== cleanState && !confirm(
+      'Loading from GitHub will replace everything currently in the form,\n' +
+      'including any unpublished edits.\n\nContinue?'
+    )) return;
+  }
+
+  if (!silent) showNotif('Loading from GitHub…', 'success', 30000);
+
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/contents/src/data/portfolio.json`,
+      { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github.v3+json' } }
+    );
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      if (!silent) {
+        showNotif(`✗ ${ghErrorHint(res.status, err.message)}`, 'error', 8000);
+      } else {
+        // The member must know their portfolio did NOT load — otherwise they
+        // may re-enter work into what looks like a fresh editor.
+        showNotif(`⚠ Couldn't auto-load your portfolio: ${ghErrorHint(res.status, err.message)}`, 'error', 12000);
+        restoreDraft();
+      }
+      return;
+    }
+
+    const file = await res.json();
+    // GitHub returns content as base64 with newlines — strip them before decoding
+    const json = decodeURIComponent(escape(atob(file.content.replace(/\n/g, ''))));
+    const data = JSON.parse(json);
+    populateForm(data);
+    cleanState = JSON.stringify(collectData()); // this state already lives on GitHub
+    clearDraft();
+    renderSaveStatus('clean');
+    showNotif(
+      silent ? '✓ Loaded from GitHub.' : '✓ Loaded your current portfolio from GitHub.',
+      'success',
+      silent ? 2000 : 4000
+    );
+  } catch (e) {
+    if (!silent) {
+      showNotif(`✗ ${e.message}`, 'error', 6000);
+    } else {
+      showNotif(`⚠ Couldn't auto-load your portfolio (${e.message}) — check your connection, then click ⬇ Load from GitHub.`, 'error', 12000);
+      restoreDraft();
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   PUBLISH TO GITHUB
+═══════════════════════════════════════════════════ */
+async function publishToGitHub() {
+  const owner = localStorage.getItem('gh_owner')?.trim();
+  const repo  = localStorage.getItem('gh_repo')?.trim();
+  const token = localStorage.getItem('gh_token')?.trim();
+
+  if (!owner || !repo || !token) {
+    showNotif('Open the ⚙ GitHub Settings panel and save your details first.', 'error', 6000);
+    return;
+  }
+
+  // Validate before publishing — catch everything that would break the
+  // build or produce a broken-looking site, with a clear message.
+  const data = collectData();
+  const problems = [];
+
+  if (!data.profile.name) {
+    problems.push('Add your Full Name in the Profile section (without it, your site shows the setup screen instead of your portfolio).');
+  }
+
+  const allCases = [...data.alerts, ...data.bec];
+  const missingId = allCases.filter(c => !c.id).length;
+  if (missingId > 0) {
+    problems.push(`${missingId} case(s) are missing a Case ID — fill in the Case ID on every card.`);
+  }
+
+  // IDs become URLs (/alerts/ALT-001/) — block characters that break routing
+  const badId = allCases.map(c => c.id).filter(id => id && !/^[A-Za-z0-9._-]+$/.test(id));
+  if (badId.length > 0) {
+    problems.push(`Case ID "${badId[0]}" — use only letters, numbers, dashes, dots or underscores (e.g. ALT-001).`);
+  }
+
+  // Duplicate IDs would collide on the same URL
+  const idSet = new Set(); const dupes = new Set();
+  allCases.forEach(c => { if (!c.id) return; if (idSet.has(c.id)) dupes.add(c.id); idSet.add(c.id); });
+  if (dupes.size > 0) {
+    problems.push(`Duplicate Case ID "${[...dupes][0]}" — every case needs a unique ID.`);
+  }
+
+  if (problems.length > 0) {
+    showNotif(`✗ ${problems[0]}`, 'error', 9000);
+    return;
+  }
+
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/src/data/portfolio.json`;
+  const headers = { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
+
+  showNotif('Checking current portfolio…', 'success', 60000);
+
+  // Fetch current file: SHA is required for the PUT update; content lets us do a safety check
+  let sha, currentData;
+  try {
+    const res = await fetch(url, { headers });
+    if (res.ok) {
+      const file = await res.json();
+      sha = file.sha;
+      try {
+        const json = decodeURIComponent(escape(atob(file.content.replace(/\n/g, ''))));
+        currentData = JSON.parse(json);
+      } catch {}
+    }
+  } catch {}
+
+  // Safety check: never publish fewer cases than GitHub already has.
+  // If the member didn't deliberately remove any cards this session, the
+  // missing cases mean the form was never loaded — hard block, no dialog
+  // to click through. Only intentional deletions get a confirm.
+  const ghAlerts = currentData?.alerts?.length ?? 0;
+  const ghBec    = currentData?.bec?.length    ?? 0;
+  if (data.alerts.length < ghAlerts || data.bec.length < ghBec) {
+    if (removedCases === 0 && !loadedFromFile) {
+      showNotif(
+        `✗ Publish blocked: your live portfolio has ${ghAlerts + ghBec} case(s) but this form only has ${data.alerts.length + data.bec.length}. ` +
+        `Click ⬇ Load from GitHub to pull in your existing cases first — publishing now would delete them.`,
+        'error', 12000
+      );
+      return;
+    }
+    const ok = confirm(
+      `⚠ OVERWRITE WARNING\n\n` +
+      `Your portfolio on GitHub currently has:\n` +
+      `  • ${ghAlerts} Alert Investigation(s)\n` +
+      `  • ${ghBec} BEC Case Drop(s)\n\n` +
+      `You are about to publish:\n` +
+      `  • ${data.alerts.length} Alert Investigation(s)\n` +
+      `  • ${data.bec.length} BEC Case Drop(s)\n\n` +
+      `Publishing now will permanently remove cases from your live portfolio.\n\n` +
+      `Press Cancel and use "⬇ Load from GitHub" to restore all your cases first.`
+    );
+    if (!ok) {
+      showNotif('Publish cancelled — use ⬇ Load from GitHub to restore your cases first.', 'error', 7000);
+      return;
+    }
+  }
+
+  showNotif('Publishing…', 'success', 60000);
+
+  // UTF-8 safe base64
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+  const body = { message: 'Update portfolio via SOCSIM editor', content: encoded };
+  if (sha) body.sha = sha;
+
+  try {
+    const res = await fetch(url, { method: 'PUT', headers, body: JSON.stringify(body) });
+    if (res.ok) {
+      clearDraft(); // published — the draft is no longer "unsaved work"
+      cleanState = JSON.stringify(collectData());
+      renderSaveStatus('clean');
+      showNotif(`✓ Published! Site rebuilds in ~60 s → github.com/${owner}/${repo}/actions`, 'success', 8000);
+    } else {
+      const err = await res.json().catch(() => ({}));
+      showNotif(`✗ ${ghErrorHint(res.status, err.message)}`, 'error', 10000);
+    }
+  } catch (e) {
+    showNotif(`✗ Network error: ${e.message}`, 'error', 8000);
+  }
+}
+
+// Translate raw GitHub API failures into something a member can act on
+function ghErrorHint(status, message) {
+  if (status === 401) return 'GitHub rejected your token (expired or revoked). Create a new token and save it in ⚙ GitHub Settings.';
+  if (status === 403) return message?.includes('rate limit')
+    ? 'GitHub rate limit hit — wait a few minutes and try again.'
+    : 'Token not allowed to write to this repo — make sure it has the "repo" scope and access to this repository.';
+  if (status === 404) return 'Repo not found — check the Username and Repository Name in ⚙ GitHub Settings (and that your token can access it).';
+  if (status === 409) return 'GitHub reported a conflict — click ⬇ Load from GitHub, re-apply your change, then publish again.';
+  return message ?? 'GitHub returned an error. Check your token and repo name in ⚙ GitHub Settings.';
+}
+
+/* ═══════════════════════════════════════════════════
+   LOAD JSON
+═══════════════════════════════════════════════════ */
+// Loading a backup file is a deliberate act — if it holds fewer cases than
+// GitHub, publish shows the overwrite confirm instead of hard-blocking.
+let loadedFromFile = false;
+
+function loadJSON(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const d = JSON.parse(e.target.result);
+      populateForm(d);
+      loadedFromFile = true;
+      showNotif('Portfolio loaded — check all fields then publish.');
+    } catch {
+      showNotif('Could not parse the file — make sure it is a valid portfolio.json.', 'error');
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+function populateForm(d) {
+  populating = true;
+  try {
+    populateFormInner(d);
+  } finally {
+    populating = false;
+  }
+}
+
+function populateFormInner(d) {
+  // Drop every existing EasyMDE instance before wiping the blocks,
+  // otherwise the registry keeps dead editors around forever.
+  Object.keys(mdes).forEach(k => {
+    try { mdes[k].toTextArea(); } catch {}
+    delete mdes[k];
+  });
+  removedCases = 0;      // fresh baseline — the form now mirrors a known source
+  loadedFromFile = false; // loadJSON re-sets this right after populateForm
+
+  const p = d.profile ?? {};
+  document.getElementById('p-name').value     = p.name     ?? '';
+  document.getElementById('p-role').value     = p.role     ?? '';
+  document.getElementById('p-tagline').value  = p.tagline  ?? '';
+  document.getElementById('p-location').value = p.location ?? '';
+  document.getElementById('p-photo').value    = p.photo    ?? '';
+  document.getElementById('p-linkedin').value = p.links?.linkedin ?? '';
+  document.getElementById('p-github').value   = p.links?.github   ?? '';
+  document.getElementById('p-email').value    = p.links?.email    ?? '';
+  selectTheme(p.theme ?? 'operator');
+
+  document.getElementById('alerts-container').innerHTML = '';
+  alertCount = 0;
+  arr(d.alerts).forEach(a => addAlert(a ?? {}));
+
+  document.getElementById('bec-container').innerHTML = '';
+  becCount = 0;
+  arr(d.bec).forEach(b => addBEC(b ?? {}));
+}
+
+/* ═══════════════════════════════════════════════════
+   AUTOSAVE TO LOCALSTORAGE
+   Saves the raw JSON every 30 s (and on tab close) so work
+   isn't lost. The draft is cleared after a successful publish,
+   so an existing draft always means "unpublished work".
+═══════════════════════════════════════════════════ */
+// Snapshot of the last state that is already safe on GitHub (published or
+// freshly loaded). If the form still matches it, there is nothing to draft —
+// prevents a phantom "unpublished work" prompt on the next visit.
+let cleanState = null;
+
+function autosave() {
+  try {
+    const json = JSON.stringify(collectData());
+    if (json === cleanState) {
+      clearDraft();
+      renderSaveStatus(cleanState !== null ? 'clean' : 'idle');
+      return;
+    }
+    localStorage.setItem('socsim_draft', json);
+    const t = new Date();
+    renderSaveStatus('dirty', `draft saved ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`);
+  } catch {}
+}
+
+function clearDraft() {
+  try { localStorage.removeItem('socsim_draft'); } catch {}
+}
+
+function getDraft() {
+  try {
+    const d = JSON.parse(localStorage.getItem('socsim_draft'));
+    // Only count as a draft if there's real content
+    if (!d?.profile?.name && !d?.alerts?.length && !d?.bec?.length) return null;
+    return d;
+  } catch { return null; }
+}
+
+function restoreDraft() {
+  const d = getDraft();
+  if (!d) return;
+  if (confirm('Restore unsaved draft from your last session?')) populateForm(d);
+  else clearDraft();
+}
+
+/* ═══════════════════════════════════════════════════
+   INIT
+   loadGHSettings and autosave run immediately.
+   The portfolio load is deferred to the 'load' event
+   so EasyMDE (loaded from CDN at the bottom of the
+   page) is guaranteed to be defined before any call
+   to new EasyMDE() inside addAlert / addBEC.
+═══════════════════════════════════════════════════ */
+loadGHSettings();
+setInterval(autosave, 30000);
+window.addEventListener('beforeunload', autosave);
+
+window.addEventListener('load', async function () {
+  const hasCredentials = !!(
+    localStorage.getItem('gh_owner')?.trim() &&
+    localStorage.getItem('gh_repo')?.trim() &&
+    localStorage.getItem('gh_token')?.trim()
+  );
+
+  // An unpublished draft always wins over the GitHub copy — it is the
+  // newer work. Publishing clears the draft, so this only ever fires
+  // when there genuinely is something unsaved.
+  const draft = getDraft();
+  if (draft) {
+    if (confirm('You have unpublished work from your last session.\n\nOK = restore it · Cancel = discard it and load your published portfolio instead.')) {
+      populateForm(draft);
+      showNotif('✓ Draft restored — publish when you\'re ready.', 'success', 5000);
+      return;
+    }
+    clearDraft();
+  }
+
+  if (hasCredentials) {
+    await loadFromGitHub(true);
+  }
+});
+</script>
+
+<!-- ── SCREENSHOT HELPER MODAL ─────────────────── -->
+<div class="screenshot-help" id="screenshot-help" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="screenshot-help-box">
+    <h3>Adding Screenshots</h3>
+    <p style="color:#888;font-size:.85rem;line-height:1.7;margin-bottom:14px;">
+      <strong style="color:#e8e8e8;">Easiest way:</strong> save your GitHub settings
+      (⚙ at the top of the page) — then the 📷 button uploads screenshots straight
+      into your write-up automatically. Manual method:
+    </p>
+    <ol>
+      <li><strong>Upload the image to your GitHub repo</strong><br>
+        Go to your repo on GitHub → navigate to <code>src/assets/</code> (create it if needed) → drag-and-drop your screenshot → commit.
+      </li>
+      <li><strong>Copy the image URL</strong><br>
+        Click the uploaded file → click <em>Raw</em> → copy the URL from your browser.<br>
+        It will look like:<br>
+        <code>https://raw.githubusercontent.com/username/repo/main/src/assets/screenshot.png</code>
+      </li>
+      <li><strong>Insert it in your write-up</strong><br>
+        Use standard Markdown image syntax:<br>
+        <code>![Description of image](paste-url-here)</code>
+      </li>
+    </ol>
+    <button class="btn close-btn" onclick="document.getElementById('screenshot-help').classList.remove('open')">Got it</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+</body>
+</html>

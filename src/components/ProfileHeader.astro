@@ -1,0 +1,71 @@
+---
+interface Links {
+  linkedin?: string;
+  github?: string;
+  email?: string;
+}
+
+interface Profile {
+  name: string;
+  role: string;
+  tagline: string;
+  location: string;
+  photo: string;
+  links: Links;
+}
+
+interface Props {
+  profile: Profile;
+}
+
+const { profile } = Astro.props;
+
+const initials = (profile.name ?? '')
+  .split(/\s+/)
+  .filter(Boolean)
+  .map((n) => n[0])
+  .slice(0, 2)
+  .join('')
+  .toUpperCase() || '◈';
+
+// Members sometimes paste profile URLs without a protocol (e.g.
+// "www.linkedin.com/in/…"). Used as a raw href that resolves as a path
+// relative to the current page instead of an external link, so add
+// https:// when one isn't already present.
+const toAbsoluteUrl = (url?: string) => {
+  const trimmed = (url ?? '').trim();
+  if (!trimmed) return '';
+  return /^[a-z][a-z0-9+.-]*:/i.test(trimmed) ? trimmed : `https://${trimmed}`;
+};
+
+const linkedinUrl = toAbsoluteUrl(profile.links.linkedin);
+const githubUrl = toAbsoluteUrl(profile.links.github);
+---
+<header class="profile-header">
+  <div class="profile-avatar">
+    {profile.photo
+      ? <img src={profile.photo} alt={profile.name} />
+      : initials
+    }
+  </div>
+
+  <div class="profile-meta">
+    <div class="profile-name">{profile.name}</div>
+    <div class="profile-role">{profile.role}</div>
+    <p class="profile-tagline">{profile.tagline}</p>
+    {profile.location && (
+      <div class="profile-location">&#9632; {profile.location}</div>
+    )}
+    <nav class="profile-links">
+      {linkedinUrl && (
+        <a href={linkedinUrl} class="profile-link" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+      )}
+      {githubUrl && (
+        <a href={githubUrl} class="profile-link" target="_blank" rel="noopener noreferrer">GitHub</a>
+      )}
+      {profile.links.email && (
+        <a href={`mailto:${profile.links.email}`} class="profile-link">Email</a>
+      )}
+    </nav>
+  </div>
+</header>
